@@ -1,0 +1,5 @@
+ef9515b6-ad88-4a3e-bd89-31384ddd53ad total_seq_len=16 num_seqs=1 mean_latency_ms=0.1705 trials_ms=[0.2541, 0.1274, 0.1299]
+9343fd82-a06d-493a-9918-1044b0c1cbd1 total_seq_len=49 num_seqs=1 mean_latency_ms=0.1443 trials_ms=[0.1938, 0.1208, 0.1184]
+c5257f65-c411-4dbb-9dc1-ad4abcf00254 total_seq_len=983 num_seqs=2 mean_latency_ms=0.1904 trials_ms=[0.2311, 0.1719, 0.1683]
+87bff084-1b7a-478e-99fd-5952c989d80e total_seq_len=202 num_seqs=3 mean_latency_ms=0.1388 trials_ms=[0.1854, 0.1142, 0.1169]
+3215fe5f-4a3b-4eb6-af20-4e17368d87a9 total_seq_len=341 num_seqs=2 mean_latency_ms=0.2074 trials_ms=[0.3615, 0.1350, 0.1256]

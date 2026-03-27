@@ -1,279 +1,62 @@
-# [FlashInfer AI Kernel Generation Contest @ MLSys 2026](http://mlsys26.flashinfer.ai/)
+# FlashInfer-Bench Bug Repro
 
-Create high-performance GPU kernels for state-of-the-art LLM architectures on NVIDIA Blackwell GPUs with humans and/or AI agents.
+This repo benchmarks the official `gdn_prefill` example solution from the MLSys 2026 contest dataset on Modal, then benchmarks a copy that adds trivial pointer-based memoization. The memoized version returns exactly the same outputs, but it appears `12.90x` faster because the benchmark repeatedly calls the same workload tensors after a warmup pass.
 
----
+That is the bug: memoization is not a kernel improvement. It exploits repeated identical benchmark inputs, not faster compute. A benchmark that treats this as a win can rank cache hits over real kernel work.
 
-<p align="center">
-  <a href="https://www.nvidia.com"><img src="images/nvidia-logo.svg" alt="NVIDIA" height="50"/></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://modal.com"><img src="images/modal-logo.png" alt="Modal" height="50"/></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://mlsys.org"><img src="images/mlsys-logo.svg" alt="MLSys" height="50"/></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/flashinfer-ai/flashinfer"><img src="images/flashinfer-logo.png" alt="FlashInfer" height="50"/></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/flashinfer-ai/flashinfer-bench"><img src="images/fib_logo.png" alt="FlashInfer-Bench" height="50"/></a>
-</p>
+## Minimal Repro
 
----
-
-[FlashInfer-Bench](https://github.com/flashinfer-ai/flashinfer-bench) is our official framework to evaluate your AI-generated kernels.
-
-## Updates
-
-* 2026.02.05: Full dataset for definitions and workloads are released at [HuggingFace](https://huggingface.co/datasets/flashinfer-ai/mlsys26-contest)
-
-## Competition Tracks
-
-The competition features three tracks, each targeting a critical LLM operation:
-
-| Track | Description |
-|-------|-------------|
-| **fused_moe** | Fused Mixture-of-Experts kernel for efficient expert routing and computation |
-| **sparse_attention** | Sparse attention mechanisms for long-context inference |
-| **gated_delta_net** | Gated delta network operations for efficient state updates |
-
-**Fork this template once per track** you want to compete in (separate repos for each track).
-
-## Getting Started
-
-### 1. Fork This Template
-
-Click "Use this template" or fork this repository to create your solution repo.
-
-### 2. Install Dependencies
+1. Create a local venv and install Modal:
 
 ```bash
-conda create -n fi-bench python=3.12
-conda activate fi-bench
-pip install flashinfer-bench modal
+python3 -m venv .venv
+.venv/bin/pip install modal
 ```
 
-### 3. Download the TraceSet
-
-We provide kernel definitions and workloads in [FlashInfer-Trace format](https://bench.flashinfer.ai/docs/flashinfer-trace). Clone the competition dataset from HuggingFace:
+2. Authenticate Modal once if needed:
 
 ```bash
-git lfs install
-git clone https://huggingface.co/datasets/flashinfer-ai/mlsys26-contest
+.venv/bin/modal setup
 ```
 
-Set the environment variable:
+3. Run the Modal benchmark on B200:
 
 ```bash
-export FIB_DATASET_PATH=/path/to/flashinfer-trace
+.venv/bin/modal run scripts/benchmark_modal.py
 ```
 
-### 4. Configure Your Solution
+## Outputs
 
-Edit `config.toml` to set your track and team info:
+- Raw Modal JSON: `benchmark_artifacts/modal_results.json`
+- Baseline latency text: `benchmark_solutions/gdn_prefill_example/latency.txt`
+- Memoized latency text: `benchmark_solutions/gdn_prefill_example_memoized/latency.txt`
 
-```toml
-[solution]
-name = "my-team-solution-v1"      # Solution name
-definition = "fused_moe"          # Track: fused_moe | sparse_attention | gated_delta_net
-author = "team-name"              # Team/author name
+## Benchmark Configuration
 
-[build]
-language = "triton"               # triton | cuda
-entry_point = "kernel"            # Kernel function name
-```
+- Warmup runs: `1`
+- Iterations: `5`
+- Trials: `3`
 
-### 5. Implement Your Kernel
+## Comparison Results
 
-**For Triton:**
-Edit `solution/triton/kernel.py` with your implementation.
+| Workload UUID | Baseline Mean (ms) | Memoized Mean (ms) | Apparent Speedup |
+|---|---:|---:|---:|
+| `ef9515b6-ad88-4a3e-bd89-31384ddd53ad` | 0.1705 | 0.0127 | 13.41x |
+| `9343fd82-a06d-493a-9918-1044b0c1cbd1` | 0.1443 | 0.0121 | 11.88x |
+| `87bff084-1b7a-478e-99fd-5952c989d80e` | 0.1388 | 0.0116 | 12.01x |
+| `3215fe5f-4a3b-4eb6-af20-4e17368d87a9` | 0.2074 | 0.0130 | 16.00x |
+| `c5257f65-c411-4dbb-9dc1-ad4abcf00254` | 0.1904 | 0.0166 | 11.44x |
 
-**For CUDA:**
-Edit `solution/cuda/kernel.cu` and `solution/cuda/binding.py` with your implementation.
+- Baseline average latency: `0.1703 ms`
+- Memoized average latency: `0.0132 ms`
+- Apparent average speedup from memoization: `12.90x`
 
-## Development Workflow
+## Correctness Check For Memoized Copy
 
-### Pack Your Solution
-
-Generate `solution.json` from your source files:
-
-```bash
-python scripts/pack_solution.py
-```
-
-### Run Local Benchmarks
-
-Test your solution on your local GPU:
-
-```bash
-python scripts/run_local.py
-```
-
-Requires: Local CUDA-capable GPU and `FIB_DATASET_PATH` environment variable.
-
-### Run Cloud Benchmarks (Modal)
-
-Test your solution on NVIDIA B200 GPUs via Modal:
-
-**One-time setup:**
-
-```bash
-modal setup
-modal volume create flashinfer-trace
-modal volume put flashinfer-trace /path/to/flashinfer-trace
-```
-
-**Run benchmark:**
-
-```bash
-modal run scripts/run_modal.py
-```
-
-## Submission
-
-To submit your solution for evaluation:
-
-1. Ensure your implementation is complete and tested
-2. Run `python scripts/pack_solution.py` to generate `solution.json`
-3. Commit and push your changes
-4. Tag your commit for evaluation (e.g., `git tag submission-v1`)
-
-## Project Structure
-
-```
-flashinfer-bench-starter-kit/
-├── README.md                    # This file
-├── config.toml                  # Track configuration (edit this)
-├── solution/                    # Solution source files
-│   ├── triton/                  # Triton implementation
-│   │   └── kernel.py           # Your Triton kernel
-│   └── cuda/                    # CUDA implementation
-│       ├── kernel.cu           # Your CUDA kernel
-│       └── binding.py          # TVM FFI bindings
-├── scripts/                     # Utility scripts
-│   ├── run_local.py            # Local benchmark runner
-│   ├── run_modal.py            # Modal cloud benchmark runner
-│   └── pack_solution.py        # Pack source files into solution.json
-└── images/                      # Sponsor logos
-```
-
-## Additional Resources
-
-### FlashInfer Trace Viewer
-
-FlashInfer Trace consists of multiple JSON objects (definitions, workloads, solutions, and traces), which can contain large code blocks. To easily visualize and inspect these objects, you can use the [FlashInfer Trace Viewer](https://bench.flashinfer.ai/viewer). Simply paste any FlashInfer Trace JSON into the viewer to get a friendly, structured view of its contents.
-
-### Solution Handling API
-
-```python
-from flashinfer_bench import BuildSpec
-from flashinfer_bench.agents import pack_solution_from_files, extract_solution_to_files
-
-# Pack source files into a Solution object
-spec = BuildSpec(
-    language="triton",  # or "cuda"
-    target_hardware=["cuda"],
-    entry_point="my_kernel",
-)
-solution = pack_solution_from_files(
-    path="./my_solution_dir",
-    spec=spec,
-    name="my_solution_v1",
-    definition="fused_moe",
-    author="your_name",
-)
-
-# Extract a Solution to files in a working directory
-extract_solution_to_files(solution, "./output_dir")
-```
-
-### Running Sanitizers
-
-```python
-from flashinfer_bench.agents import flashinfer_bench_run_sanitizer
-
-output = flashinfer_bench_run_sanitizer(
-    solution=solution,
-    workload=workload,
-    sanitizer_types=["memcheck", "racecheck", "synccheck", "initcheck"],
-    timeout=300,
-)
-print(output)
-```
-
-### NCU Profiling
-
-```python
-from flashinfer_bench.agents import flashinfer_bench_run_ncu
-
-output = flashinfer_bench_run_ncu(
-    solution=solution,
-    workload=workload,
-    set="detailed",
-    page="details",
-    timeout=120,
-)
-print(output)
-```
-
-### List Available Tools
-
-```python
-from flashinfer_bench.agents import get_all_tool_schemas
-
-schemas = get_all_tool_schemas()
-# Returns list of OpenAI-compatible function schemas
-```
-
-## Notes
-
-### Destination Passing Style (DPS)
-
-FlashInfer-Bench uses destination passing style (DPS) by default, where both inputs and outputs are passed as function parameters. DPS avoids measuring tensor allocation overhead, resulting in more accurate performance numbers. We recommend using DPS when possible, as it yields better benchmark results.
-
-**Important:** Avoid using variadic input arguments in your kernel signatures, as they will fail the builder validation check.
-
-If your kernel uses value-returning style (i.e., returns output tensors instead of writing to pre-allocated ones), set `destination_passing_style` to `false` in your solution's `spec`:
-
-```json
-{
-  "name": "my_solution",
-  "definition": "gdn_decode_qk4_v8_d128_k_last",
-  "author": "my_name",
-  "spec": {
-    "language": "triton",
-    "target_hardware": ["cuda"],
-    "entry_point": "kernel.py::my_kernel",
-    "dependencies": [],
-    "destination_passing_style": false
-  },
-  "sources": [...]
-}
-```
-
-**Common error when DPS is mismatched:**
-
-```
-Destination-passing style callable: expected xx parameters, but got xx
-```
-
-This can happen for two reasons: (1) your kernel function signature has the wrong number of parameters, or (2) your kernel uses value-returning style but the solution still has `destination_passing_style` set to `true` by default. For the latter case, fix by setting `destination_passing_style` to `false`.
-
-### CUDA Kernel Bindings
-
-For CUDA kernel implementations, we recommend using [TVM FFI](https://tvm.apache.org/ffi/) for Python bindings. The `flashinfer_bench.agents` module provides TVM FFI agent instruction prompts to assist with development.
-
-You can set the `binding` field in your solution's `spec` to specify the C++ binding type. Defaults to `"tvm-ffi"` if not specified. Supported values: `"tvm-ffi"`, `"torch"`.
-
-```json
-{
-  "name": "my_cuda_solution",
-  "definition": "gdn_decode_qk4_v8_d128_k_last",
-  "author": "my_name",
-  "spec": {
-    "language": "cuda",
-    "target_hardware": ["cuda"],
-    "entry_point": "kernel.cu::my_kernel",
-    "dependencies": [],
-    "binding": "torch"
-  },
-  "sources": [...]
-}
-```
+| Workload UUID | Output Diff | State Diff |
+|---|---:|---:|
+| `ef9515b6-ad88-4a3e-bd89-31384ddd53ad` | `0` | `0` |
+| `9343fd82-a06d-493a-9918-1044b0c1cbd1` | `0` | `0` |
+| `c5257f65-c411-4dbb-9dc1-ad4abcf00254` | `0` | `0` |
+| `87bff084-1b7a-478e-99fd-5952c989d80e` | `0` | `0` |
+| `3215fe5f-4a3b-4eb6-af20-4e17368d87a9` | `0` | `0` |

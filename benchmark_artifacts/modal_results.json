@@ -1,0 +1,134 @@
+{
+  "definition": "gdn_prefill_qk4_v8_d128_k_last",
+  "config": {
+    "warmup_runs": 1,
+    "iterations": 5,
+    "num_trials": 3
+  },
+  "solutions": {
+    "gdn_prefill_example": [
+      {
+        "uuid": "ef9515b6-ad88-4a3e-bd89-31384ddd53ad",
+        "total_seq_len": 16,
+        "num_seqs": 1,
+        "trial_latencies_ms": [
+          0.25407359600067136,
+          0.12744319438934326,
+          0.12992639541625978
+        ],
+        "mean_latency_ms": 0.1704810619354248
+      },
+      {
+        "uuid": "9343fd82-a06d-493a-9918-1044b0c1cbd1",
+        "total_seq_len": 49,
+        "num_seqs": 1,
+        "trial_latencies_ms": [
+          0.19377919435501098,
+          0.1208191990852356,
+          0.1184000015258789
+        ],
+        "mean_latency_ms": 0.14433279832204182
+      },
+      {
+        "uuid": "c5257f65-c411-4dbb-9dc1-ad4abcf00254",
+        "total_seq_len": 983,
+        "num_seqs": 2,
+        "trial_latencies_ms": [
+          0.2311039924621582,
+          0.17186559438705445,
+          0.16828160285949706
+        ],
+        "mean_latency_ms": 0.19041706323623656
+      },
+      {
+        "uuid": "87bff084-1b7a-478e-99fd-5952c989d80e",
+        "total_seq_len": 202,
+        "num_seqs": 3,
+        "trial_latencies_ms": [
+          0.18542079925537108,
+          0.11420799493789673,
+          0.1168895959854126
+        ],
+        "mean_latency_ms": 0.13883946339289346
+      },
+      {
+        "uuid": "3215fe5f-4a3b-4eb6-af20-4e17368d87a9",
+        "total_seq_len": 341,
+        "num_seqs": 2,
+        "trial_latencies_ms": [
+          0.3614784002304077,
+          0.13498239517211913,
+          0.12563199996948243
+        ],
+        "mean_latency_ms": 0.20736426512400308
+      }
+    ],
+    "gdn_prefill_example_memoized": [
+      {
+        "uuid": "ef9515b6-ad88-4a3e-bd89-31384ddd53ad",
+        "total_seq_len": 16,
+        "num_seqs": 1,
+        "trial_latencies_ms": [
+          0.019270400702953338,
+          0.009587199985980987,
+          0.009267199784517288
+        ],
+        "mean_latency_ms": 0.012708266824483871,
+        "max_abs_diff_output": 0.0,
+        "max_abs_diff_state": 0.0
+      },
+      {
+        "uuid": "9343fd82-a06d-493a-9918-1044b0c1cbd1",
+        "total_seq_len": 49,
+        "num_seqs": 1,
+        "trial_latencies_ms": [
+          0.018681600689888,
+          0.008947200328111648,
+          0.0088128000497818
+        ],
+        "mean_latency_ms": 0.012147200355927151,
+        "max_abs_diff_output": 0.0,
+        "max_abs_diff_state": 0.0
+      },
+      {
+        "uuid": "c5257f65-c411-4dbb-9dc1-ad4abcf00254",
+        "total_seq_len": 983,
+        "num_seqs": 2,
+        "trial_latencies_ms": [
+          0.033190399408340454,
+          0.008742400258779526,
+          0.007987199723720551
+        ],
+        "mean_latency_ms": 0.016639999796946844,
+        "max_abs_diff_output": 0.0,
+        "max_abs_diff_state": 0.0
+      },
+      {
+        "uuid": "87bff084-1b7a-478e-99fd-5952c989d80e",
+        "total_seq_len": 202,
+        "num_seqs": 3,
+        "trial_latencies_ms": [
+          0.01852799952030182,
+          0.00825600028038025,
+          0.007897599786520004
+        ],
+        "mean_latency_ms": 0.011560533195734024,
+        "max_abs_diff_output": 0.0,
+        "max_abs_diff_state": 0.0
+      },
+      {
+        "uuid": "3215fe5f-4a3b-4eb6-af20-4e17368d87a9",
+        "total_seq_len": 341,
+        "num_seqs": 2,
+        "trial_latencies_ms": [
+          0.02006399929523468,
+          0.009683199971914292,
+          0.009145600348711013
+        ],
+        "mean_latency_ms": 0.012964266538619996,
+        "max_abs_diff_output": 0.0,
+        "max_abs_diff_state": 0.0
+      }
+    ]
+  }
+}
